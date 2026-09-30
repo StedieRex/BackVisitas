@@ -1,5 +1,6 @@
 package com.luminisoft.visitas.service;
 
+import com.luminisoft.visitas.dto.VisitGridDTO;
 import com.luminisoft.visitas.dto.VisitRequestDTO;
 import com.luminisoft.visitas.entity.*;
 import com.luminisoft.visitas.repository.PaymentPromiseRepository;
@@ -8,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -66,5 +70,28 @@ public class VisitService {
         }
 
         return savedVisit.getId();
+    }
+
+    // Importa esto arriba si no lo tienes:
+
+    public List<VisitGridDTO> getAllVisitsForGrid() {
+        return visitRepository.findAll().stream().map(visit -> {
+            
+            // Validaciones para evitar NullPointerException si algún catálogo viene vacío
+            String actionDesc = visit.getActionCode() != null ? visit.getActionCode().getDescription() : "N/A";
+            String resultDesc = visit.getResult() != null ? visit.getResult().getDescription() : "N/A";
+            String street = visit.getAddress() != null ? visit.getAddress().getStreet() : "Sin dirección";
+            String clientName = visit.getClient() != null ? visit.getClient().getName() : "Desconocido";
+
+            return VisitGridDTO.builder()
+                    .id(visit.getId())
+                    .clientName(clientName)
+                    .addressStreet(street)
+                    .actionCodeDescription(actionDesc)
+                    .resultDescription(resultDesc)
+                    .visitedAt(visit.getVisitedAt())
+                    .isOperating(visit.getIsOperating().name())
+                    .build();
+        }).collect(Collectors.toList());
     }
 }
