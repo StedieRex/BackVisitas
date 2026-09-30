@@ -23,6 +23,10 @@ public class Visit {
     private Client client; //[cite: 1]
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "address_id")
+    private Address address;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "action_code_id")
     private ActionCode actionCode; //[cite: 1]
 
