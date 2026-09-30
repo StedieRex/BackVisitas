@@ -5,15 +5,25 @@ import com.luminisoft.visitas.dto.VisitGridDTO;
 import com.luminisoft.visitas.dto.VisitRequestDTO;
 import com.luminisoft.visitas.entity.*;
 import com.luminisoft.visitas.repository.PaymentPromiseRepository;
+import com.luminisoft.visitas.repository.VisitPhotoRepository;
 import com.luminisoft.visitas.repository.VisitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import com.luminisoft.visitas.dto.VisitDetailDTO;
+
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.*;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +31,7 @@ public class VisitService {
 
     private final VisitRepository visitRepository;
     private final PaymentPromiseRepository paymentPromiseRepository;
+    private final VisitPhotoRepository visitPhotoRepository;
 
     @Transactional
     public Long createVisit(VisitRequestDTO dto, Long currentUserId) {
@@ -128,5 +139,40 @@ public class VisitService {
                 .visitedAt(visit.getVisitedAt())
                 .paymentPromise(promiseDTO)
                 .build();
+    }
+
+    public Long uploadPhoto(Long visitId, MultipartFile file, Long currentUserId) throws Exception {
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new RuntimeException("Visita no encontrada"));
+
+        // Crear la carpeta de almacenamiento si no existe
+        Path uploadPath = Paths.get("uploads/photos/");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Generar nombre único para no sobreescribir archivos
+        String originalName = file.getOriginalFilename();
+        String extension = originalName != null && originalName.contains(".") 
+                ? originalName.substring(originalName.lastIndexOf(".")) : "";
+        String storedName = UUID.randomUUID().toString() + extension;
+        Path filePath = uploadPath.resolve(storedName);
+
+        // Guardar el archivo físicamente en el disco duro
+        Files.copy(file.getInputStream(), filePath);
+
+        // Registrar los datos en la tabla visit_photos[cite: 1]
+        VisitPhoto photo = new VisitPhoto();
+        photo.setVisit(visit);
+        photo.setOriginalName(originalName);
+        photo.setStoredName(storedName);
+        photo.setPath(filePath.toString());
+        photo.setExtension(extension.replace(".", "")); 
+        photo.setMimeType(file.getContentType());
+        photo.setSize(file.getSize());
+        photo.setCreatedBy(currentUserId);
+
+        VisitPhoto savedPhoto = visitPhotoRepository.save(photo);
+        return savedPhoto.getId();
     }
 }
