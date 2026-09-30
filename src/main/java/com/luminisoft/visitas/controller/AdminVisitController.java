@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import org.springframework.web.bind.annotation.PathVariable;
+import com.luminisoft.visitas.dto.VisitDetailDTO;
 
 @RestController
 @RequestMapping("/api/admin/visitas")
@@ -20,5 +22,11 @@ public class AdminVisitController {
     public ResponseEntity<List<VisitGridDTO>> getVisitsGrid() {
         List<VisitGridDTO> visits = visitService.getAllVisitsForGrid();
         return ResponseEntity.ok(visits);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VisitDetailDTO> getVisitDetail(@PathVariable Long id) {
+        VisitDetailDTO detail = visitService.getVisitDetail(id);
+        return ResponseEntity.ok(detail);
     }
 }

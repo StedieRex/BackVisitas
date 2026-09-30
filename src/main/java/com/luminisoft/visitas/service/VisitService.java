@@ -1,5 +1,6 @@
 package com.luminisoft.visitas.service;
 
+import com.luminisoft.visitas.dto.VisitDetailDTO;
 import com.luminisoft.visitas.dto.VisitGridDTO;
 import com.luminisoft.visitas.dto.VisitRequestDTO;
 import com.luminisoft.visitas.entity.*;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.luminisoft.visitas.dto.VisitDetailDTO;
 
 @Service
 @RequiredArgsConstructor
@@ -93,5 +95,38 @@ public class VisitService {
                     .isOperating(visit.getIsOperating().name())
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    public VisitDetailDTO getVisitDetail(Long visitId) {
+        Visit visit = visitRepository.findById(visitId)
+                .orElseThrow(() -> new RuntimeException("Visita no encontrada"));
+
+        // Buscamos si existe una promesa de pago vinculada
+        VisitDetailDTO.PaymentPromiseDTO promiseDTO = null;
+        var optionalPromise = paymentPromiseRepository.findByVisitId(visitId);
+        
+        if (optionalPromise.isPresent()) {
+            promiseDTO = VisitDetailDTO.PaymentPromiseDTO.builder()
+                    .amount(optionalPromise.get().getAmount())
+                    .promisedDate(optionalPromise.get().getPromisedDate())
+                    .build();
+        }
+
+        return VisitDetailDTO.builder()
+                .visitId(visit.getId())
+                .clientId(visit.getClient() != null ? visit.getClient().getId() : null)
+                .addressId(visit.getAddress() != null ? visit.getAddress().getId() : null)
+                .actionCodeId(visit.getActionCode() != null ? visit.getActionCode().getId() : null)
+                .resultId(visit.getResult() != null ? visit.getResult().getId() : null)
+                .noPaymentReasonId(visit.getNoPaymentReason() != null ? visit.getNoPaymentReason().getId() : null)
+                .attendedBy(visit.getAttendedBy())
+                .kinship(visit.getKinship())
+                .comments(visit.getComments())
+                .propertyDescription(visit.getPropertyDescription())
+                .businessActivity(visit.getBusinessActivity())
+                .isOperating(visit.getIsOperating())
+                .visitedAt(visit.getVisitedAt())
+                .paymentPromise(promiseDTO)
+                .build();
     }
 }
