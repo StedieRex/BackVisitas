@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 import java.util.List;
@@ -112,7 +110,7 @@ public class VisitService {
         Visit visit = visitRepository.findById(visitId)
                 .orElseThrow(() -> new RuntimeException("Visita no encontrada"));
 
-        // Buscamos si existe una promesa de pago vinculada
+        // 1. Buscamos si existe una promesa de pago vinculada
         VisitDetailDTO.PaymentPromiseDTO promiseDTO = null;
         var optionalPromise = paymentPromiseRepository.findByVisitId(visitId);
         
@@ -121,6 +119,17 @@ public class VisitService {
                     .amount(optionalPromise.get().getAmount())
                     .promisedDate(optionalPromise.get().getPromisedDate())
                     .build();
+        }
+
+        // 2. NUEVO: Buscamos si existe una foto vinculada
+        String photoUrl = null;
+        var optionalPhoto = visitPhotoRepository.findByVisitId(visitId); // Usa tu repositorio de fotos
+        
+        if (optionalPhoto.isPresent()) {
+            // Extraemos el nombre con el que guardaste el archivo (ej: "foto_15.jpg")
+            String fileName = optionalPhoto.get().getStoredName();
+            // Construimos la URL apuntando al endpoint que crearemos en el paso 3
+            photoUrl = "http://localhost:8080/api/admin/visitas/fotos/" + fileName;
         }
 
         return VisitDetailDTO.builder()
@@ -138,6 +147,7 @@ public class VisitService {
                 .isOperating(visit.getIsOperating())
                 .visitedAt(visit.getVisitedAt())
                 .paymentPromise(promiseDTO)
+                .photoUrl(photoUrl) // NUEVO: Pasamos la URL al DTO
                 .build();
     }
 

@@ -16,16 +16,16 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        if (userRepository.findByEmail("agente@test.com").isEmpty()) {
+        if (userRepository.findByEmail("admin@test.com").isEmpty()) {
             User testUser = new User();
-            testUser.setName("Agente de Prueba");
-            testUser.setEmail("agente@test.com");
+            testUser.setName("Admin de Prueba");
+            testUser.setEmail("admin@test.com");
             // Encriptamos la contraseña "123456"
             testUser.setPassword(passwordEncoder.encode("123456")); 
-            testUser.setRole("AGENTE"); 
+            testUser.setRole("ADMINISTRADOR"); 
             
             userRepository.save(testUser);
-            System.out.println("✅ Usuario de prueba creado exitosamente: agente@test.com / 123456");
+            System.out.println("✅ Usuario de prueba creado exitosamente: admin@test.com / 123456");
         }
     }
 }

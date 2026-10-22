@@ -22,6 +22,7 @@ public class VisitDetailDTO {
     private String comments;
     private String propertyDescription;
     private String businessActivity;
+    private String photoUrl;
     private OperatingStatus isOperating;
     private LocalDateTime visitedAt;
 
